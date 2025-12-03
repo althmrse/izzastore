@@ -8,8 +8,6 @@ It aims to demonstrate the integration of frontend, backend, and database techno
 ## 📄 License
 This project is for **educational purposes only** and serves as a **Final Academic Requirement**.
 
----
-
 ## ✨ Author
 Developed by: Group 3 - J3S  
 Course/Subject: *System Integration and Architecture*  
