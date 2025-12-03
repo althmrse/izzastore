@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Inventory</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Inventory</h2>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('product_management') }}">Product Management</a>
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a>
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a>
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a>
+  </div>
+
+  <!-- Main Dashboard -->
+  <div class="main">
+    <div class="title">IzzaStore Inventory Dashboard</div>
+    <div class="datetime" id="datetime"></div>
+    <div class="greeting">Welcome, Admin!</div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="icon">🛒</div>
+        <div class="title">Total Products</div>
+        <div class="value">{{ total_products }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="icon">💸</div>
+        <div class="title">Total Inventory Value</div>
+        <div class="value">₱{{ "%.2f"|format(total_value) }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="icon">📦</div>
+        <div class="title">Items in Stock</div>
+        <div class="value">{{ total_stock }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="icon">⚠️</div>
+        <div class="title">Low Stock Items</div>
+        <div class="value">{{ low_stock_items }}</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to update date and time
+    function updateDateTime() {
+      const now = new Date();
+      const datetime = now.toLocaleString();
+      document.getElementById('datetime').innerText = datetime;
+    }
+
+    // Update every second
+    setInterval(updateDateTime, 1000);
+    updateDateTime();
+  </script>
+
+</body>
+</html>

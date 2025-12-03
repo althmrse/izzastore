@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Page setup -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Monitoring</title>
+
+  <!-- Link to external CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    /* Pagination styling */
+    .pagination { margin-top: 15px; }
+    .pagination button { margin: 2px; padding: 6px 12px; cursor: pointer; }
+
+    /* Popup Notification */
+    #popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: none;
+      padding: 16px 24px;
+      background: #ff6fa3; /* Pink color matching your site */
+      color: white;
+      border-radius: 8px;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: fadeInOut 3s forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar navigation -->
+  <div class="sidebar">
+    <h2>Inventory</h2>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('product_management') }}">Product Management</a>
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a>
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a>
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1>Stock Monitoring</h1>
+
+    <div class="card">
+      <h3>Available Products</h3>
+      
+      <!-- Search bar and controls -->
+      <div class="dashboard-controls">
+        <input type="text" id="searchBox" placeholder="Search Product">
+        <button class="btn" onclick="applySearch()">Search</button>
+        <button class="btn" onclick="resetSearch()">Reset</button>
+      </div>
+
+      <!-- Product table -->
+      <table id="productTable">
+        <tr>
+          <th>Image</th>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Buy</th>
+        </tr>
+        {% for p in products %}
+        <tr>
+          <td>
+            {% if p.image %}
+              <img src="{{ url_for('static', filename='uploads/' ~ p.image) }}" width="60">
+            {% else %}
+              No Image
+            {% endif %}
+          </td>
+          <td>{{ p.name }}</td>
+          <td>{{ p.category.name }}</td>
+          <td>{{ "%.2f"|format(p.price) }}</td>
+          <td>{{ p.quantity }}</td>
+          <td>
+            <form class="buyForm" method="POST" action="{{ url_for('buy_product', id=p.id) }}">
+              <input type="number" name="qty" min="1" max="{{ p.quantity }}" required>
+              <button type="submit">Buy</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+
+      <!-- Pagination controls -->
+      <div class="pagination">
+        <button onclick="prevPage()">Prev</button>
+        <span id="pageInfo"></span>
+        <button onclick="nextPage()">Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popup Notification -->
+  <div id="popup"></div>
+
+  <!-- Pagination and search script -->
+  <script>
+    let currentPage = 1;
+    const rowsPerPage = 5;
+    let filteredRows = [];
+
+    function getRows() {
+      return Array.from(document.querySelectorAll("#productTable tr")).slice(1);
+    }
+
+    function applySearch() {
+      let keyword = document.getElementById("searchBox").value.toLowerCase();
+      let allRows = getRows();
+      filteredRows = allRows.filter(row => {
+        let name = row.cells[1].innerText.toLowerCase();
+        let category = row.cells[2].innerText.toLowerCase();
+        return name.includes(keyword) || category.includes(keyword);
+      });
+      currentPage = 1;
+      paginate();
+    }
+
+    function resetSearch() {
+      document.getElementById("searchBox").value = "";
+      filteredRows = getRows();
+      currentPage = 1;
+      paginate();
+    }
+
+    function paginate() {
+      let rows = getRows();
+      rows.forEach(r => r.style.display = "none");
+
+      let totalRows = filteredRows.length;
+      let totalPages = Math.max(1, Math.ceil(totalRows / rowsPerPage));
+
+      let start = (currentPage - 1) * rowsPerPage;
+      let end = start + rowsPerPage;
+
+      filteredRows.slice(start, end).forEach(row => row.style.display = "");
+
+      document.getElementById("pageInfo").innerText =
+        "Page " + currentPage + " of " + totalPages;
+    }
+
+    function nextPage() {
+      let totalPages = Math.ceil(filteredRows.length / rowsPerPage);
+      if (currentPage < totalPages) { currentPage++; paginate(); }
+    }
+
+    function prevPage() {
+      if (currentPage > 1) { currentPage--; paginate(); }
+    }
+
+    window.onload = () => {
+      filteredRows = getRows();
+      paginate();
+    };
+
+    // ---------------- Popup for Buy Button ----------------
+    const popup = document.getElementById("popup");
+
+    function showPopup(message, callback=null){
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+        if(callback) callback();
+      }, 3000); // 3 seconds duration
+    }
+
+    // Attach popup to all buy forms
+    const buyForms = document.querySelectorAll(".buyForm");
+    buyForms.forEach(form => {
+      form.addEventListener("submit", function(e){
+        e.preventDefault();
+        showPopup("Successfully bought product", () => {
+          form.submit(); // submit after popup disappears
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

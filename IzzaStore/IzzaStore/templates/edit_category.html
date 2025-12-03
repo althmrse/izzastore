@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic setup -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Category</title>
+  <!-- External stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    /* Popup Notification */
+    #popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: none;
+      padding: 16px 24px;
+      background: #ff6fa3; /* Pink color matching site */
+      color: white;
+      border-radius: 8px;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: fadeInOut 3s forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar navigation -->
+  <div class="sidebar">
+    <h2>Inventory</h2>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('product_management') }}">Product Management</a>
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a>
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a>
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1>Edit Category</h1>
+
+    <div class="card">
+      {% if error %}
+        <p style="color: red;">{{ error }}</p>
+      {% endif %}
+
+      <!-- Edit category form -->
+      <form id="editCategoryForm" method="POST">
+        <input type="text" name="name" value="{{ category.name }}" required>
+        <button type="submit">Save Changes</button>
+        <a href="{{ url_for('manage_categories') }}" class="btn-cancel">Cancel</a>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup Notification -->
+  <div id="popup"></div>
+
+  <script>
+    const popup = document.getElementById("popup");
+    const editCategoryForm = document.getElementById("editCategoryForm");
+
+    function showPopup(message, callback=null){
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+        if(callback) callback();
+      }, 3000); // 3 seconds
+    }
+
+    editCategoryForm.addEventListener("submit", function(e){
+      e.preventDefault(); // Stop immediate submit
+      showPopup("Successfully saved changes", () => {
+        editCategoryForm.submit(); // Submit after popup disappears
+      });
+    });
+  </script>
+
+</body>
+</html>

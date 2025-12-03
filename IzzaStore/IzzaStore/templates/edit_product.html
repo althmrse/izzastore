@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Edit Product</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    /* --- Image preview styling --- */
+    .img-preview {
+      display: block;
+      width: 180px;              
+      height: 180px;
+      object-fit: cover;         
+      border-radius: 10px;       
+      margin: 10px auto;         
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      background-color: #f8f8f8;
+      border: 1px solid #ddd;
+      padding: 5px;
+    }
+
+    .form-group img + p {
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    /* Popup Notification */
+    #popup {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3000;
+      display: none;
+      padding: 16px 24px;
+      background: #ff6fa3; /* pink color matching site */
+      color: white;
+      border-radius: 8px;
+      font-size: 18px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      text-align: center;
+      animation: fadeInOut 3s forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar navigation -->
+  <div class="sidebar">
+    <h2>Inventory</h2>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('product_management') }}">Product Management</a>
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a>
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a>
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1>Edit Product</h1>
+
+    <div class="add-product-container">
+      {% if error %}<p class="error">{{ error }}</p>{% endif %}
+
+      <form id="editForm" method="POST" enctype="multipart/form-data">
+
+        <div class="form-group">
+          <label>Product Name</label>
+          <input type="text" name="name" value="{{ product.name }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Main Category</label>
+          <select id="mainCategory" name="main_category" required>
+            <option value="" disabled selected>Select Main Category</option>
+            {% for c in categories if not c.parent_id %}
+              <option value="{{ c.id }}" 
+                {% if product.category.parent_id == None and product.category_id == c.id or product.category.parent_id == c.id %}
+                  selected
+                {% endif %}>
+                {{ c.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Subcategory</label>
+          <select id="subCategory" name="category" required>
+            <option value="" disabled selected>Select Subcategory</option>
+            {% for c in categories if c.parent_id %}
+              <option value="{{ c.id }}" data-parent="{{ c.parent_id }}" 
+                {% if product.category_id == c.id %}selected{% endif %}>
+                {{ c.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" name="qty" value="{{ product.quantity }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Price (₱)</label>
+          <input type="number" step="0.01" name="price" value="{{ product.price }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Current Image</label>
+          {% if product.image %}
+            <img src="{{ url_for('static', filename='uploads/' ~ product.image) }}" class="img-preview" alt="Product Image">
+          {% else %}
+            <p class="text-muted">No Image</p>
+          {% endif %}
+        </div>
+
+        <div class="form-group">
+          <label>Change Image</label>
+          <input type="file" name="image" accept="image/*" onchange="previewImage(event)">
+          <img id="preview" class="img-preview" style="display:none;" alt="Preview">
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary">💾 Save Changes</button>
+          <a href="{{ url_for('product_management') }}" class="btn-cancel">✖ Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Popup Notification -->
+  <div id="popup"></div>
+
+  <script>
+    // Preview uploaded image live
+    function previewImage(e) {
+      const preview = document.getElementById('preview');
+      preview.src = URL.createObjectURL(e.target.files[0]);
+      preview.style.display = 'block';
+    }
+
+    // Filter subcategories
+    document.addEventListener("DOMContentLoaded", () => {
+      const main = document.getElementById("mainCategory");
+      const sub = document.getElementById("subCategory");
+      const allSubs = [...sub.options].slice(1); // skip placeholder
+
+      const filter = () => {
+        sub.innerHTML = '<option value="" disabled selected>Select Subcategory</option>';
+        allSubs.forEach(opt => opt.dataset.parent === main.value && sub.appendChild(opt));
+      };
+
+      main.addEventListener("change", filter);
+      if (main.value) filter(); 
+    });
+
+    // ---------------- Popup for Save Changes ----------------
+    const popup = document.getElementById("popup");
+    const editForm = document.getElementById("editForm");
+
+    function showPopup(message, callback=null){
+      popup.textContent = message;
+      popup.style.display = "block";
+      setTimeout(() => {
+        popup.style.display = "none";
+        if(callback) callback();
+      }, 3000); // 3 seconds
+    }
+
+    editForm.addEventListener("submit", function(e){
+      e.preventDefault();
+      showPopup("Successfully saved changes", () => {
+        editForm.submit(); // submit after popup disappears
+      });
+    });
+  </script>
+
+</body>
+</html>

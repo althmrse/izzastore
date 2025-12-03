@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"> <!-- Sets character encoding -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Makes page responsive -->
+  <title>Stock Reports - Inventory</title> <!-- Page title -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> <!-- Link to external stylesheet -->
+  <style>
+    /* Style for low stock text */
+    .low-stock {
+      color: red;
+      font-weight: bold;
+    }
+    /* Alert box for low stock warning */
+    .alert-box {
+      background: #ffe6e6;
+      border: 1px solid red;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar"> <!-- Sidebar navigation section -->
+    <h2>Inventory</h2> <!-- Sidebar title -->
+    <a href="{{ url_for('home') }}">Dashboard</a> <!-- Link to dashboard -->
+    <a href="{{ url_for('product_management') }}">Product Management</a> <!-- Link to product management -->
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a> <!-- Link to stock monitoring page -->
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a> <!-- Link to stock reports page -->
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a> <!-- Link to category management -->
+  </div>
+
+  <!-- Main -->
+  <div class="main"> <!-- Main content area -->
+    <h1>Stock Reports</h1> <!-- Main header -->
+
+    <div class="card"> <!-- Daily stock summary card -->
+      <h3>Daily Stock Summary</h3>
+      <table> <!-- Table showing stock metrics -->
+        <tr><th>Metric</th><th>Value</th></tr>
+        <tr>
+          <td>Total Items</td>
+          <td>{{ total_items }}</td> <!-- Display total number of items -->
+        </tr>
+        <tr>
+          <td>Total Value</td>
+          <td>₱{{ "%.2f"|format(total_value) }}</td> <!-- Display total inventory value -->
+        </tr>
+      </table>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    <div class="card"> <!-- Card for low stock alerts -->
+      <h3>Low Stock Alerts</h3>
+      {% set low_stock_products = products | selectattr("quantity", "lt", 7) | list %} <!-- Filters products below quantity 7 -->
+      {% if low_stock_products %}
+        <div class="alert-box"> <!-- Alert box for low stock items -->
+          <p>⚠️ The following items are running low (below 7):</p>
+          <ul>
+            {% for p in low_stock_products %}
+              <li class="low-stock">{{ p.name }} ({{ p.quantity }} left)</li> <!-- Displays product name and quantity -->
+            {% endfor %}
+          </ul>
+        </div>
+      {% else %}
+        <p>No low stock items today ✅</p> <!-- Message if all stocks are sufficient -->
+      {% endif %}
+    </div>
+  </div>
+
+</body>
+</html>

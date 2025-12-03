@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- Basic setup -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Categories</title>
+
+  <!-- External stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+  <style>
+    /* Subcategory dropdown styling */
+    .subcategory-list {
+      display: none;
+      margin-left: 30px;
+      background-color: #fff6fb;
+      border-left: 3px solid #ff66b2;
+      padding: 5px 10px;
+    }
+
+    /* Category rows and hover effect */
+    .category-row { cursor: pointer; }
+    .category-row:hover { background-color: #ffe6f0; }
+
+    /* Toggle button for subcategories */
+    .toggle-btn {
+      background: none;
+      border: none;
+      color: #ff66b2;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .toggle-btn:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar navigation -->
+  <div class="sidebar">
+    <h2>Inventory</h2>
+    <a href="{{ url_for('home') }}">Dashboard</a>
+    <a href="{{ url_for('product_management') }}">Product Management</a>
+    <a href="{{ url_for('customer_purchase') }}">Stock Monitoring</a>
+    <a href="{{ url_for('stock_reports') }}">Stock Reports</a>
+    <a href="{{ url_for('manage_categories') }}">Manage Categories</a>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <h1>Manage Categories</h1>
+
+    <!-- Show error message -->
+    {% if error %}
+      <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <!-- Add main category -->
+    <div class="card">
+      <h3>Add Category</h3>
+      <form method="POST" action="{{ url_for('add_category') }}">
+        <input name="name" placeholder="New Category" required>
+        <button type="submit">Add Category</button>
+      </form>
+    </div>
+
+    <!-- Add subcategory -->
+    <div class="card">
+      <h3>Add Subcategory</h3>
+      <form method="POST" action="{{ url_for('add_subcategory') }}">
+        <!-- Parent category dropdown -->
+        <select id="parent_id" name="parent_id" required>
+          <option value="" disabled selected>Select Parent Category</option>
+          {% for c in categories if not c.parent_id %}
+            <option value="{{ c.id }}">{{ c.name }}</option>
+          {% endfor %}
+        </select><br><br>
+
+        <!-- Subcategory name input -->
+        <label for="subcategory_name"><b>Subcategory Name</b></label><br>
+        <input id="subcategory_name" name="name" placeholder="New Subcategory" required>
+        <button type="submit">Add Subcategory</button>
+      </form>
+    </div>
+
+    <!-- Category list with subcategories -->
+    <div class="card">
+      <h3>All Categories</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Loop through main categories -->
+          {% for c in categories if not c.parent_id %}
+          <tr class="category-row">
+            <td>
+              <!-- Toggle subcategories -->
+              <button class="toggle-btn" onclick="toggleSubcategories('{{ c.id }}')">▼</button>
+              {{ c.name }}
+            </td>
+            <td>
+              <!-- Edit/Delete buttons -->
+              <a href="{{ url_for('edit_category', id=c.id) }}" class="edit-category-btn">Edit</a>
+              <a href="{{ url_for('delete_category', id=c.id) }}" class="delete-category-btn" onclick="return confirm('Delete this category?')">Delete</a>
+            </td>
+          </tr>
+
+          <!-- Show subcategories -->
+          {% set subcats = categories | selectattr('parent_id', 'equalto', c.id) | list %}
+          {% for sub in subcats %}
+          <tr class="subcategory-row subcats-{{ c.id }}" style="display:none;">
+            <td style="padding-left: 40px;">• {{ sub.name }}</td>
+            <td>
+              <a href="{{ url_for('edit_category', id=sub.id) }}" class="edit-category-btn">Edit</a>
+              <a href="{{ url_for('delete_category', id=sub.id) }}" class="delete-category-btn" onclick="return confirm('Delete this subcategory?')">Delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Toggle subcategory visibility -->
+  <script>
+    function toggleSubcategories(id) {
+      const rows = document.querySelectorAll(`.subcats-${id}`);
+      rows.forEach(row => {
+        row.style.display = row.style.display === "none" ? "table-row" : "none";
+      });
+    }
+  </script>
+
+</body>
+</html>
