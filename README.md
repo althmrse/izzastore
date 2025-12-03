@@ -9,6 +9,6 @@ It aims to demonstrate the integration of frontend, backend, and database techno
 This project is for **educational purposes only** and serves as a **Final Academic Requirement**.
 
 ## ✨ Author
-Developed by: Group 3 - J3S  
+Developed by: J3S - Group 3
 Course/Subject: *System Integration and Architecture*  
 Academic Year: *2025 - 2026*
